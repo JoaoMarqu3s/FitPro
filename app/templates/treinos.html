@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelos de Treino - FitPro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    {% include '_header.html' %}
+
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <div class="mb-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            {% set bg_color = 'bg-green-100 border-green-400 text-green-700' if category == 'success' else 'bg-red-100
+            border-red-400 text-red-700' %}
+            <div class="{{ bg_color }} border px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ message }}</span>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            {% include '_navigation.html' %}
+
+            <div class="p-8">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Modelos de Treino</h2>
+                    <p class="text-gray-600">Crie e gerencie os modelos de treino da academia.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800">Novo Modelo de Treino</h3>
+                        <form method="POST" action="{{ url_for('main.treinos') }}" class="space-y-4" novalidate>
+                            {{ form.hidden_tag() }}
+                            <div>
+                                {{ form.nome.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                                {{ form.nome(class="w-full px-4 py-2 border border-gray-300 rounded-lg") }}
+                            </div>
+                            <div>
+                                {{ form.instrutor.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                                {{ form.instrutor(class="w-full px-4 py-2 border border-gray-300 rounded-lg") }}
+                            </div>
+                            <div>
+                                {{ form.descricao.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                                {{ form.descricao(class="w-full px-4 py-2 border border-gray-300 rounded-lg") }}
+                            </div>
+                            {{ form.submit(class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6
+                            rounded-lg") }}
+                        </form>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800">Treinos Cadastrados</h3>
+                        <div class="space-y-3">
+                            {% if treinos %}
+                            {% for treino in treinos %}
+                            <a href="{{ url_for('main.treino_detalhe', treino_id=treino.id) }}"
+                                class="block hover:bg-gray-100">
+                                <div class="bg-white p-3 rounded-lg border border-gray-200">
+                                    <div class="font-medium text-gray-800">{{ treino.nome }}</div>
+                                    <div class="text-sm text-gray-600">Criado por: {{ treino.instrutor.nome }}</div>
+                                </div>
+                            </a>
+                            {% endfor %}
+                            {% else %}
+                            <p class="text-gray-600">Nenhum modelo de treino cadastrado.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

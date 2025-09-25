@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Teste de Câmera - Quiosque</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body class="bg-gray-200 flex flex-col items-center justify-center h-screen">
+    <h1 class="text-3xl font-bold mb-4">Aponte o QR CODE</h1>
+    
+    <div id="qr-reader" style="width: 500px; max-width: 90vw;"></div>
+    <div id="qr-reader-results" class="mt-4 text-lg font-semibold"></div>
+
+    <script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        const resultContainer = document.getElementById('qr-reader-results');
+        let isProcessing = false;
+
+        function onScanSuccess(decodedText, decodedResult) {
+            if (isProcessing) {
+                return;
+            }
+            isProcessing = true;
+
+            // Mostra um feedback visual imediato
+            resultContainer.textContent = 'Código lido! Processando...';
+            resultContainer.style.backgroundColor = '#FBBF24'; // Amarelo
+            resultContainer.style.color = 'black';
+            
+            // Pausa a câmera para evitar novas leituras
+            html5QrcodeScanner.pause();
+            
+            const fullUrl = `${window.location.origin}${decodedText}`;
+            
+            fetch(fullUrl, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                resultContainer.textContent = data.message;
+                if (data.status === 'success') {
+                    resultContainer.style.backgroundColor = '#10B981'; // Verde
+                    resultContainer.style.color = 'white';
+                } else {
+                    resultContainer.style.backgroundColor = '#EF4444'; // Vermelho
+                    resultContainer.style.color = 'white';
+                }
+            })
+            .catch(err => {
+                console.error("Erro no fetch:", err);
+                resultContainer.textContent = 'Erro de comunicação com o servidor.';
+                resultContainer.style.backgroundColor = '#EF4444'; // Vermelho
+                resultContainer.style.color = 'white';
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    resultContainer.textContent = '';
+                    resultContainer.style.backgroundColor = 'transparent';
+                    html5QrcodeScanner.resume();
+                    isProcessing = false;
+                }, 5000); // Reseta após 5 segundos
+            });
+        }
+
+        function onScanFailure(error) {
+            // Silencioso para não poluir
+        }
+
+        let html5QrcodeScanner = new Html5QrcodeScanner(
+            "qr-reader", 
+            { fps: 10, qrbox: 250 }, 
+            /* verbose= */ false);
+        
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    });
+</script>
+</body>
+</html>

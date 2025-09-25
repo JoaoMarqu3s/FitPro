@@ -1,0 +1,60 @@
+<div class="border-b border-gray-200">
+    <nav class="flex space-x-0">
+        <a href="{{ url_for('main.lista_alunos') }}" id="tab-alunos" class="tab-button flex-1 py-4 px-6 text-center font-medium">
+            <div class="flex items-center justify-center space-x-2"><span>👤</span><span>Alunos</span></div>
+        </a>
+        <a href="{{ url_for('main.frequencia') }}" id="tab-frequencia" class="tab-button flex-1 py-4 px-6 text-center font-medium">
+            <div class="flex items-center justify-center space-x-2"><span>📊</span><span>Frequência</span></div>
+        </a>
+        <a href="{{ url_for('main.matriculas') }}" id="tab-matricula" class="tab-button flex-1 py-4 px-6 text-center font-medium">
+            <div class="flex items-center justify-center space-x-2"><span>📝</span><span>Matrícula</span></div>
+        </a>
+        <a href="{{ url_for('main.treinos') }}" id="tab-treinos" class="tab-button flex-1 py-4 px-6 text-center font-medium">
+            <div class="flex items-center justify-center space-x-2"><span>🏋️</span><span>Treinos</span></div>
+        </a>
+
+        {% if current_user.is_authenticated and current_user.role == 'admin' %}
+        <a href="{{ url_for('main.instrutores') }}" id="tab-tercerizados" class="tab-button flex-1 py-4 px-6 text-center font-medium">
+            <div class="flex items-center justify-center space-x-2"><span>🤝</span><span>Funcionários</span></div>
+        </a>
+        <a href="{{ url_for('main.planilhas') }}" id="tab-planilhas" class="tab-button flex-1 py-4 px-6 text-center font-medium">
+            <div class="flex items-center justify-center space-x-2"><span>📈</span><span>Planilhas</span></div>
+        </a>
+        {% endif %}
+    </nav>
+</div>
+
+<script>
+    const endpoint = "{{ request.endpoint }}";
+    let activeButtonId;
+
+    // Condições para identificar a página ativa
+    if (endpoint.includes('aluno')) { // Pega lista_alunos, novo_aluno, editar_aluno
+        activeButtonId = 'tab-alunos';
+    } else if (endpoint.includes('frequencia')) {
+        activeButtonId = 'tab-frequencia';
+    } else if (endpoint.includes('matricula')) {
+        activeButtonId = 'tab-matricula';
+    } else if (endpoint.includes('treinos')) {
+        activeButtonId = 'tab-treinos';
+    } else if (endpoint.includes('instrutores')) {
+        activeButtonId = 'tab-tercerizados';
+    } else if (endpoint.includes('planilhas')) {
+        activeButtonId = 'tab-planilhas';
+    }
+
+    // Aplica os estilos
+    const allTabs = document.querySelectorAll('.tab-button');
+    allTabs.forEach(tab => {
+        tab.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+        tab.classList.remove('bg-blue-600', 'text-white');
+    });
+
+    if (activeButtonId) {
+        const activeButton = document.getElementById(activeButtonId);
+        if (activeButton) {
+            activeButton.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+            activeButton.classList.add('bg-blue-600', 'text-white');
+        }
+    }
+</script>

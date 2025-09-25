@@ -1,0 +1,15 @@
+# Arquivos do Ambiente Virtual
+venv/
+*.pyc
+
+# Arquivos de Banco de Dados
+app.db
+
+# Pastas de Cache e Build
+__pycache__/
+dist/
+build/
+*.spec
+
+# Arquivos de IDE (ex: VS Code)
+.vscode/

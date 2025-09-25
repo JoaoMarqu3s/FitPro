@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Frequência - FitPro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    {% include '_header.html' %}
+
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mb-4">
+            {% for category, message in messages %}
+            {% set bg_color = 'bg-green-100 border-green-400 text-green-700' if category == 'success' else ('bg-yellow-100 border-yellow-400 text-yellow-700' if category == 'warning' else 'bg-red-100 border-red-400 text-red-700') %}
+            <div class="{{ bg_color }} border px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            {% include '_navigation.html' %}
+
+            <div class="p-8">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Controle de Frequência</h2>
+                    <p class="text-gray-600">Monitore a presença dos alunos na academia</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800">Check-in de Aluno</h3>
+                        <form method="POST" action="{{ url_for('main.frequencia') }}" class="space-y-4" novalidate>
+                            {{ form.hidden_tag() }}
+                            <div>
+                                {{ form.busca.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                                {{ form.busca(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500", placeholder="Digite o nome ou CPF") }}
+                            </div>
+                            {{ form.submit(class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg") }}
+                        </form>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800">Presentes Hoje</h3>
+                            <div class="flex space-x-2">
+                                {% set base_class = 'px-3 py-1 text-sm font-medium rounded-full' %}
+                                {% set active_class = 'bg-blue-600 text-white' %}
+                                {% set inactive_class = 'bg-gray-200 text-gray-700 hover:bg-gray-300' %}
+                                <a href="{{ url_for('main.frequencia', filtro='todos') }}" class="{{ base_class }} {{ active_class if filtro_ativo == 'todos' else inactive_class }}">Todos</a>
+                                <a href="{{ url_for('main.frequencia', filtro='Liberado') }}" class="{{ base_class }} {{ active_class if filtro_ativo == 'Liberado' else inactive_class }}">Liberados</a>
+                                <a href="{{ url_for('main.frequencia', filtro='Bloqueado') }}" class="{{ base_class }} {{ active_class if filtro_ativo == 'Bloqueado' else inactive_class }}">Bloqueados</a>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            {% for registro in registros_paginados.items %}
+                            <div class="bg-white p-3 rounded-lg border border-gray-200 flex justify-between items-center">
+                                <div>
+                                    <div class="font-medium text-gray-800">
+                                        <a href="{{ url_for('main.aluno_detalhe', aluno_id=registro.membro.id) }}" class="hover:underline text-blue-600">
+                                            {{ registro.membro.nome }}
+                                        </a>
+                                    </div>
+                                    <div class="text-sm text-gray-600">Entrada: {{ registro.data_hora.strftime('%H:%M') }}</div>
+                                </div>
+                                {% if registro.status == 'Liberado' %}
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">Liberado</span>
+                                {% else %}
+                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-semibold">Bloqueado</span>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <p class="text-gray-600">Nenhum registro encontrado para este filtro.</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mt-6 flex justify-between items-center">
+                            <p class="text-sm text-gray-600">
+                                Mostrando {{ registros_paginados.items | length }} de {{ registros_paginados.total }} registros.
+                            </p>
+                            <div class="flex items-center space-x-1">
+                                <a href="{{ url_for('main.frequencia', page=registros_paginados.prev_num, filtro=filtro_ativo) if registros_paginados.has_prev else '#' }}"
+                                   class="{{ 'pointer-events-none opacity-50' if not registros_paginados.has_prev }} px-3 py-2 border rounded-lg text-gray-600 hover:bg-gray-100">
+                                    Anterior
+                                </a>
+                                {% for page_num in registros_paginados.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                                    {% if page_num %}
+                                        <a href="{{ url_for('main.frequencia', page=page_num, filtro=filtro_ativo) }}"
+                                           class="{{ 'bg-blue-600 text-white' if page_num == registros_paginados.page else 'bg-white text-gray-600' }} px-3 py-2 border rounded-lg hover:bg-gray-100">
+                                            {{ page_num }}
+                                        </a>
+                                    {% else %}
+                                        <span class="px-3 py-2">...</span>
+                                    {% endif %}
+                                {% endfor %}
+                                <a href="{{ url_for('main.frequencia', page=registros_paginados.next_num, filtro=filtro_ativo) if registros_paginados.has_next else '#' }}"
+                                   class="{{ 'pointer-events-none opacity-50' if not registros_paginados.has_next }} px-3 py-2 border rounded-lg text-gray-600 hover:bg-gray-100">
+                                    Próximo
+                                </a>
+                            </div>
+                        </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

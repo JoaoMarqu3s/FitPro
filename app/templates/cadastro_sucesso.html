@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro Realizado com Sucesso - FitPro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    {% include '_header.html' %}
+    <div class="max-w-2xl mx-auto px-6 py-8 mt-10">
+        <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+            <div class="mb-4">
+                <svg class="mx-auto h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h1 class="text-2xl font-bold text-gray-800 mt-4">Aluno Cadastrado com Sucesso!</h1>
+                <p class="text-gray-600 mt-2">O QR Code de acesso para <strong>{{ aluno.nome }}</strong> foi gerado.</p>
+            </div>
+
+            <div class="my-6">
+                <img src="{{ url_for('main.gerar_qrcode', aluno_id=aluno.id) }}" alt="QR Code do Aluno" class="mx-auto border-4 border-gray-200 rounded-lg">
+            </div>
+
+            <p class="text-sm text-gray-500">Peça para o aluno escanear este código com a câmera do celular e salvar a imagem para futuros check-ins.</p>
+
+            <div class="mt-8">
+                <a href="{{ url_for('main.lista_alunos') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg">
+                    Concluído
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
