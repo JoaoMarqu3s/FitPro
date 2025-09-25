@@ -17,9 +17,7 @@
         </a>
 
         {% if current_user.is_authenticated and current_user.role == 'admin' %}
-        <a href="{{ url_for('main.financeiro') }}" id="tab-financeiro" class="tab-button flex-1 py-4 px-4 text-center font-medium">
-            <div class="flex items-center justify-center space-x-2"><span>💰</span><span>Financeiro</span></div>
-        </a>
+        
         <a href="{{ url_for('main.instrutores') }}" id="tab-tercerizados" class="tab-button flex-1 py-4 px-4 text-center font-medium">
             <div class="flex items-center justify-center space-x-2"><span>🤝</span><span>Tercerizados</span></div>
         </a>
@@ -28,6 +26,9 @@
         </a>
         <a href="{{ url_for('main.gerenciar_avisos') }}" id="tab-avisos" class="tab-button flex-1 py-4 px-4 text-center font-medium">
             <div class="flex items-center justify-center space-x-2"><span>📢</span><span>Avisos</span></div>
+        </a>
+        <a href="{{ url_for('main.financeiro') }}" id="tab-financeiro" class="tab-button flex-1 py-4 px-4 text-center font-medium">
+            <div class="flex items-center justify-center space-x-2"><span>💰</span><span>Financeiro</span></div>
         </a>
         {% endif %}
     </nav>
