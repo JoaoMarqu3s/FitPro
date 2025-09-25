@@ -22,7 +22,7 @@ class Config:
 
     # --- NOVA CONFIGURAÇÃO DE DESCONTO ---
     # Desconto em porcentagem para pagamentos à vista (PIX/Débito)
-    DESCONTO_A_VISTA = 10.0 
+    DESCONTO_A_VISTA = 10.0
 
 
     
