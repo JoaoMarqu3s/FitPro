@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Financeiro - FitPro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    {% include '_header.html' %}
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            {% include '_navigation.html' %}
+            <div class="p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Gestão Financeira</h2>
+
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">Filtrar por Status:</label>
+                            <div class="flex space-x-2 mt-2">
+                                {% set base_class = 'px-3 py-1 text-sm font-medium rounded-full' %}
+                                {% set active_class = 'bg-blue-600 text-white' %}
+                                {% set inactive_class = 'bg-gray-200 text-gray-700 hover:bg-gray-300' %}
+                                <a href="{{ url_for('main.financeiro', status='todos', periodo=filtro_periodo_ativo) }}" class="{{ base_class }} {{ active_class if filtro_status_ativo == 'todos' else inactive_class }}">Todos</a>
+                                <a href="{{ url_for('main.financeiro', status='Pendente', periodo=filtro_periodo_ativo) }}" class="{{ base_class }} {{ active_class if filtro_status_ativo == 'Pendente' else inactive_class }}">Pendentes</a>
+                                <a href="{{ url_for('main.financeiro', status='Confirmado', periodo=filtro_periodo_ativo) }}" class="{{ base_class }} {{ active_class if filtro_status_ativo == 'Confirmado' else inactive_class }}">Confirmados</a>
+                                <a href="{{ url_for('main.financeiro', status='Cancelado', periodo=filtro_periodo_ativo) }}" class="{{ base_class }} {{ active_class if filtro_status_ativo == 'Cancelado' else inactive_class }}">Cancelados</a>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">Filtrar por Período:</label>
+                            <div class="flex space-x-2 mt-2">
+                                <a href="{{ url_for('main.financeiro', periodo='todos', status=filtro_status_ativo) }}" class="{{ base_class }} {{ active_class if filtro_periodo_ativo == 'todos' else inactive_class }}">Todo o Período</a>
+                                <a href="{{ url_for('main.financeiro', periodo='este_mes', status=filtro_status_ativo) }}" class="{{ base_class }} {{ active_class if filtro_periodo_ativo == 'este_mes' else inactive_class }}">Este Mês</a>
+                                <a href="{{ url_for('main.financeiro', periodo='mes_passado', status=filtro_status_ativo) }}" class="{{ base_class }} {{ active_class if filtro_periodo_ativo == 'mes_passado' else inactive_class }}">Mês Passado</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Aluno</th>
+                                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Data</th>
+                                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Valor</th>
+                                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            {% for pagamento in pagamentos_paginados.items %}
+                            <tr>
+                                <td class="px-6 py-4">{{ pagamento.matricula.membro.nome }}</td>
+                                <td class="px-6 py-4">{{ pagamento.data_pagamento | localtime }}</td>
+                                <td class="px-6 py-4 font-semibold">R$ {{ "%.2f"|format(pagamento.valor) }}</td>
+                                <td class="px-6 py-4">
+                                    {% set cor = 'bg-yellow-100 text-yellow-800' if pagamento.status == 'Pendente' else ('bg-green-100 text-green-800' if pagamento.status == 'Confirmado' else 'bg-red-100 text-red-800') %}
+                                    <span class="{{ cor }} px-2 py-1 rounded-full text-xs font-semibold">{{ pagamento.status }}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if pagamento.status == 'Pendente' %}
+                                    <div class="flex space-x-2">
+                                        <form method="POST" action="{{ url_for('main.confirmar_pagamento', pagamento_id=pagamento.id) }}"><button type="submit" class="text-green-600 hover:underline text-sm">Confirmar</button></form>
+                                        <form method="POST" action="{{ url_for('main.cancelar_pagamento', pagamento_id=pagamento.id) }}"><button type="submit" class="text-red-600 hover:underline text-sm">Cancelar</button></form>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Nenhum pagamento encontrado para este filtro.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-6 flex justify-between items-center">
+                    <p class="text-sm text-gray-600">Mostrando {{ pagamentos_paginados.items | length }} de {{ pagamentos_paginados.total }} pagamentos.</p>
+                    <div class="flex items-center space-x-1">
+                        <a href="{{ url_for('main.financeiro', page=pagamentos_paginados.prev_num, status=filtro_status_ativo, periodo=filtro_periodo_ativo) if pagamentos_paginados.has_prev else '#' }}" class="{{ 'pointer-events-none opacity-50' if not pagamentos_paginados.has_prev }} px-3 py-2 border rounded-lg">Anterior</a>
+                        {% for page_num in pagamentos_paginados.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                            {% if page_num %}<a href="{{ url_for('main.financeiro', page=page_num, status=filtro_status_ativo, periodo=filtro_periodo_ativo) }}" class="{{ 'bg-blue-600 text-white' if page_num == pagamentos_paginados.page else 'bg-white' }} px-3 py-2 border rounded-lg">{{ page_num }}</a>
+                            {% else %}<span class="px-3 py-2">...</span>{% endif %}
+                        {% endfor %}
+                        <a href="{{ url_for('main.financeiro', page=pagamentos_paginados.next_num, status=filtro_status_ativo, periodo=filtro_periodo_ativo) if pagamentos_paginados.has_next else '#' }}" class="{{ 'pointer-events-none opacity-50' if not pagamentos_paginados.has_next }} px-3 py-2 border rounded-lg">Próximo</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

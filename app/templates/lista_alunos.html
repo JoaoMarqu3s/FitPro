@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Alunos - FitPro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); body { font-family: 'Inter', sans-serif; }</style>
@@ -45,14 +44,29 @@
                         </div>
                     </form>
                 </div>
-
+                
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex space-x-2">
+                        <span class="text-sm font-medium text-gray-700 self-center">Ordenar por:</span>
+                        {% set base_class = 'px-3 py-1 text-sm font-medium rounded-full' %}
+                        {% set active_class = 'bg-blue-600 text-white' %}
+                        {% set inactive_class = 'bg-gray-200 text-gray-700 hover:bg-gray-300' %}
+                        
+                        <a href="{{ url_for('main.lista_alunos', ordem='nome', busca=termo_busca) }}" class="{{ base_class }} {{ active_class if ordem_ativa == 'nome' else inactive_class }}">Nome</a>
+                        <a href="{{ url_for('main.lista_alunos', ordem='recentes', busca=termo_busca) }}" class="{{ base_class }} {{ active_class if ordem_ativa == 'recentes' else inactive_class }}">Mais Recentes</a>
+                        <a href="{{ url_for('main.lista_alunos', ordem='antigos', busca=termo_busca) }}" class="{{ base_class }} {{ active_class if ordem_ativa == 'antigos' else inactive_class }}">Mais Antigos</a>
+                    </div>
+                    <p class="text-sm text-gray-600">
+                        Total: {{ alunos_paginados.total }} alunos
+                    </p>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Nome</th>
-                                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>
-                                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Telefone</th>
+                                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Data de Cadastro</th>
+                                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Contato</th>
                                 <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Ações</th>
                             </tr>
                         </thead>
@@ -60,56 +74,36 @@
                             {% for aluno in alunos_paginados.items %}
                             <tr>
                                 <td class="px-6 py-4 text-sm text-gray-900">
-                                    <a href="{{ url_for('main.aluno_detalhe', aluno_id=aluno.id) }}" class="font-medium text-blue-600 hover:underline">
-                                        {{ aluno.nome }}
-                                    </a>
+                                    <a href="{{ url_for('main.aluno_detalhe', aluno_id=aluno.id) }}" class="font-medium text-blue-600 hover:underline">{{ aluno.nome }}</a>
                                 </td>
+                                <td class="px-6 py-4 text-sm text-gray-600">{{ aluno.data_cadastro | localtime }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-600">{{ aluno.email }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-600">{{ aluno.telefone }}</td>
                                 <td class="px-6 py-4 text-sm flex items-center space-x-2">
                                     <a href="{{ url_for('main.editar_aluno', aluno_id=aluno.id) }}" class="text-blue-600 hover:underline">Editar</a>
-                                    <form method="POST" action="{{ url_for('main.excluir_aluno', aluno_id=aluno.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir este aluno?');">
+                                    <form method="POST" action="{{ url_for('main.excluir_aluno', aluno_id=aluno.id) }}" onsubmit="return confirm('Tem certeza?');">
                                         <button type="submit" class="text-red-600 hover:underline border-none bg-transparent p-0 cursor-pointer">Excluir</button>
                                     </form>
                                 </td>
                             </tr>
                             {% else %}
-                            <tr>
-                                <td colspan="4" class="px-6 py-4 text-center text-gray-500">Nenhum aluno encontrado.</td>
-                            </tr>
+                            <tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Nenhum aluno encontrado.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
 
                 <div class="mt-6 flex justify-between items-center">
-                    <p class="text-sm text-gray-600">
-                        Mostrando {{ alunos_paginados.items | length }} de {{ alunos_paginados.total }} alunos.
-                    </p>
+                    <p class="text-sm text-gray-600">Página {{ alunos_paginados.page }} de {{ alunos_paginados.pages }}.</p>
                     <div class="flex items-center space-x-1">
-                        <a href="{{ url_for('main.lista_alunos', page=alunos_paginados.prev_num, busca=termo_busca) if alunos_paginados.has_prev else '#' }}"
-                           class="{{ 'pointer-events-none opacity-50' if not alunos_paginados.has_prev }} px-3 py-2 border rounded-lg text-gray-600 hover:bg-gray-100">
-                            Anterior
-                        </a>
-                        
+                        <a href="{{ url_for('main.lista_alunos', page=alunos_paginados.prev_num, busca=termo_busca, ordem=ordem_ativa) if alunos_paginados.has_prev else '#' }}" class="{{ 'pointer-events-none opacity-50' if not alunos_paginados.has_prev }} px-3 py-2 border rounded-lg">Anterior</a>
                         {% for page_num in alunos_paginados.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
-                            {% if page_num %}
-                                <a href="{{ url_for('main.lista_alunos', page=page_num, busca=termo_busca) }}"
-                                   class="{{ 'bg-blue-600 text-white' if page_num == alunos_paginados.page else 'bg-white text-gray-600' }} px-3 py-2 border rounded-lg hover:bg-gray-100 hover:text-black">
-                                    {{ page_num }}
-                                </a>
-                            {% else %}
-                                <span class="px-3 py-2">...</span>
-                            {% endif %}
+                            {% if page_num %}<a href="{{ url_for('main.lista_alunos', page=page_num, busca=termo_busca, ordem=ordem_ativa) }}" class="{{ 'bg-blue-600 text-white' if page_num == alunos_paginados.page else 'bg-white' }} px-3 py-2 border rounded-lg">{{ page_num }}</a>
+                            {% else %}<span class="px-3 py-2">...</span>{% endif %}
                         {% endfor %}
-                        
-                        <a href="{{ url_for('main.lista_alunos', page=alunos_paginados.next_num, busca=termo_busca) if alunos_paginados.has_next else '#' }}"
-                           class="{{ 'pointer-events-none opacity-50' if not alunos_paginados.has_next }} px-3 py-2 border rounded-lg text-gray-600 hover:bg-gray-100">
-                            Próximo
-                        </a>
+                        <a href="{{ url_for('main.lista_alunos', page=alunos_paginados.next_num, busca=termo_busca, ordem=ordem_ativa) if alunos_paginados.has_next else '#' }}" class="{{ 'pointer-events-none opacity-50' if not alunos_paginados.has_next }} px-3 py-2 border rounded-lg">Próximo</a>
                     </div>
                 </div>
-                </div>
+            </div>
         </div>
     </div>
 </body>

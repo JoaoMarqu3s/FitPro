@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modelos de Treino - FitPro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -19,9 +18,9 @@
     {% include '_header.html' %}
 
     <div class="max-w-7xl mx-auto px-6 py-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
         <div class="mb-4">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
             {% for category, message in messages %}
             {% set bg_color = 'bg-green-100 border-green-400 text-green-700' if category == 'success' else 'bg-red-100
             border-red-400 text-red-700' %}
@@ -29,9 +28,9 @@
                 <span class="block sm:inline">{{ message }}</span>
             </div>
             {% endfor %}
-            {% endif %}
-            {% endwith %}
         </div>
+        {% endif %}
+        {% endwith %}
 
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
             {% include '_navigation.html' %}
@@ -66,20 +65,58 @@
 
                     <div class="bg-gray-50 rounded-lg p-6">
                         <h3 class="text-lg font-semibold mb-4 text-gray-800">Treinos Cadastrados</h3>
+
+                        <form method="GET" action="{{ url_for('main.treinos') }}" class="mb-4">
+                            <div class="flex">
+                                <input type="text" name="busca"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-l-lg"
+                                    placeholder="Pesquisar por nome do treino..." value="{{ termo_busca or '' }}">
+                                <button type="submit"
+                                    class="bg-gray-700 hover:bg-gray-800 text-white font-medium py-2 px-4 rounded-r-lg">Buscar</button>
+                            </div>
+                        </form>
+
                         <div class="space-y-3">
-                            {% if treinos %}
-                            {% for treino in treinos %}
-                            <a href="{{ url_for('main.treino_detalhe', treino_id=treino.id) }}"
-                                class="block hover:bg-gray-100">
-                                <div class="bg-white p-3 rounded-lg border border-gray-200">
-                                    <div class="font-medium text-gray-800">{{ treino.nome }}</div>
+                            {% for treino in treinos_paginados.items %}
+                            <div
+                                class="bg-white p-3 rounded-lg border border-gray-200 flex justify-between items-center">
+                                <a href="{{ url_for('main.treino_detalhe', treino_id=treino.id) }}" class="flex-grow">
+                                    <div class="font-medium text-gray-800 hover:text-blue-600">{{ treino.nome }}</div>
                                     <div class="text-sm text-gray-600">Criado por: {{ treino.instrutor.nome }}</div>
+                                </a>
+                                <div class="flex items-center space-x-4">
+                                    <a href="{{ url_for('main.editar_treino', treino_id=treino.id) }}"
+                                        class="text-blue-600 hover:underline text-sm font-medium">Editar</a>
+                                    <form method="POST"
+                                        action="{{ url_for('main.excluir_treino', treino_id=treino.id) }}"
+                                        onsubmit="return confirm('Tem certeza que deseja excluir este modelo de treino?');">
+                                        <button type="submit"
+                                            class="text-red-600 hover:underline text-sm font-medium border-none bg-transparent p-0 cursor-pointer">Excluir</button>
+                                    </form>
                                 </div>
-                            </a>
-                            {% endfor %}
+                            </div>
                             {% else %}
-                            <p class="text-gray-600">Nenhum modelo de treino cadastrado.</p>
-                            {% endif %}
+                            <p class="text-gray-600">Nenhum modelo de treino encontrado.</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mt-6 flex justify-between items-center">
+                            <p class="text-sm text-gray-600">Mostrando {{ treinos_paginados.items | length }} de {{
+                                treinos_paginados.total }} treinos.</p>
+                            <div class="flex items-center space-x-1">
+                                <a href="{{ url_for('main.treinos', page=treinos_paginados.prev_num, busca=termo_busca) if treinos_paginados.has_prev else '#' }}"
+                                    class="{{ 'pointer-events-none opacity-50' if not treinos_paginados.has_prev }} px-3 py-2 border rounded-lg">Anterior</a>
+                                {% for page_num in treinos_paginados.iter_pages(left_edge=1, right_edge=1,
+                                left_current=1, right_current=2) %}
+                                {% if page_num %}<a
+                                    href="{{ url_for('main.treinos', page=page_num, busca=termo_busca) }}"
+                                    class="{{ 'bg-blue-600 text-white' if page_num == treinos_paginados.page else 'bg-white' }} px-3 py-2 border rounded-lg">{{
+                                    page_num }}</a>
+                                {% else %}<span class="px-3 py-2">...</span>{% endif %}
+                                {% endfor %}
+                                <a href="{{ url_for('main.treinos', page=treinos_paginados.next_num, busca=termo_busca) if treinos_paginados.has_next else '#' }}"
+                                    class="{{ 'pointer-events-none opacity-50' if not treinos_paginados.has_next }} px-3 py-2 border rounded-lg">Próximo</a>
+                            </div>
                         </div>
                     </div>
                 </div>

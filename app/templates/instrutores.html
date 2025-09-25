@@ -1,39 +1,44 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instrutores - FitPro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
     </style>
 </head>
+
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
     {% include '_header.html' %}
+
     <div class="max-w-7xl mx-auto px-6 py-8">
-        <div class="mb-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    {% set bg_color = 'bg-green-100 border-green-400 text-green-700' if category == 'success' else 'bg-red-100 border-red-400 text-red-700' %}
-                    <div class="{{ bg_color }} border px-4 py-3 rounded relative" role="alert">
-                        <span class="block sm:inline">{{ message }}</span>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        {% if messages %}
+        <div class="mb-4">
+            {% for category, message in messages %}
+            {% set bg_color = 'bg-green-100 border-green-400 text-green-700' if category == 'success' else 'bg-red-100
+            border-red-400 text-red-700' %}
+            <div class="{{ bg_color }} border px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ message }}</span>
+            </div>
+            {% endfor %}
         </div>
+        {% endif %}
+        {% endwith %}
 
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
             {% include '_navigation.html' %}
 
             <div class="p-8">
                 <div class="mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Gestão de Tercerizados</h2>
-                    <p class="text-gray-600">Gerencie os dados dos instrutores e outros profissionais</p>
+                    <h2 class="text-2xl font-bold text-gray-800">Gestão de Tercerizados</h2>
+                    <p class="text-gray-600">Gerencie os dados dos instrutores e outros profissionais.</p>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -44,44 +49,89 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     {{ form.nome.label(class="block text-sm font-medium text-gray-700 mb-2") }}
-                                    {{ form.nome(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500", placeholder="Nome do profissional") }}
+                                    {{ form.nome(class="w-full px-4 py-2 border border-gray-300 rounded-lg") }}
                                 </div>
                                 <div>
                                     {{ form.cpf.label(class="block text-sm font-medium text-gray-700 mb-2") }}
-                                    {{ form.cpf(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500", placeholder="CPF do profissional") }}
+                                    {{ form.cpf(class="w-full px-4 py-2 border border-gray-300 rounded-lg") }}
                                 </div>
                             </div>
-                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     {{ form.email.label(class="block text-sm font-medium text-gray-700 mb-2") }}
-                                    {{ form.email(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500", placeholder="E-mail") }}
+                                    {{ form.email(class="w-full px-4 py-2 border border-gray-300 rounded-lg") }}
                                 </div>
                                 <div>
                                     {{ form.telefone.label(class="block text-sm font-medium text-gray-700 mb-2") }}
-                                    {{ form.telefone(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500", placeholder="Telefone") }}
+                                    {{ form.telefone(class="w-full px-4 py-2 border border-gray-300 rounded-lg") }}
                                 </div>
                             </div>
                             <div>
                                 {{ form.especialidade.label(class="block text-sm font-medium text-gray-700 mb-2") }}
-                                {{ form.especialidade(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500", placeholder="Ex: Musculação, Dança, Nutricionista") }}
+                                {{ form.especialidade(class="w-full px-4 py-2 border border-gray-300 rounded-lg",
+                                placeholder="Ex: Musculação, Dança...") }}
                             </div>
-                            {{ form.submit(class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg") }}
+                            {{ form.submit(class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6
+                            rounded-lg") }}
                         </form>
                     </div>
 
                     <div class="bg-gray-50 rounded-lg p-6">
                         <h3 class="text-lg font-semibold mb-4 text-gray-800">Instrutores Ativos</h3>
+
+                        <form method="GET" action="{{ url_for('main.instrutores') }}" class="mb-4">
+                            <div class="flex">
+                                <input type="text" name="busca"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-l-lg"
+                                    placeholder="Buscar por nome, CPF ou especialidade..."
+                                    value="{{ termo_busca or '' }}">
+                                <button type="submit"
+                                    class="bg-gray-700 hover:bg-gray-800 text-white font-medium py-2 px-4 rounded-r-lg">Buscar</button>
+                            </div>
+                        </form>
+
                         <div class="space-y-3">
-                            {% if instrutores %}
-                                {% for instrutor in instrutores %}
-                                <div class="bg-white p-3 rounded-lg border border-gray-200">
+                            {% for instrutor in instrutores_paginados.items %}
+                            <div
+                                class="bg-white p-3 rounded-lg border border-gray-200 flex justify-between items-center">
+                                <div>
                                     <div class="font-medium text-gray-800">{{ instrutor.nome }}</div>
-                                    <div class="text-sm text-gray-600">{{ instrutor.especialidade }} - {{ instrutor.email }}</div>
+                                    <div class="text-sm text-gray-600">{{ instrutor.especialidade }} - {{
+                                        instrutor.email }}</div>
                                 </div>
-                                {% endfor %}
+                                <div class="flex items-center space-x-4">
+                                    <a href="{{ url_for('main.editar_instrutor', instrutor_id=instrutor.id) }}"
+                                        class="text-blue-600 hover:underline text-sm font-medium">Editar</a>
+                                    <form method="POST"
+                                        action="{{ url_for('main.excluir_instrutor', instrutor_id=instrutor.id) }}"
+                                        onsubmit="return confirm('Tem certeza que deseja excluir este instrutor?');">
+                                        <button type="submit"
+                                            class="text-red-600 hover:underline text-sm font-medium border-none bg-transparent p-0 cursor-pointer">Excluir</button>
+                                    </form>
+                                </div>
+                            </div>
                             {% else %}
-                            <p class="text-gray-600">Nenhum instrutor cadastrado.</p>
-                            {% endif %}
+                            <p class="text-gray-600">Nenhum instrutor encontrado.</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mt-6 flex justify-between items-center">
+                            <p class="text-sm text-gray-600">Mostrando {{ instrutores_paginados.items | length }} de {{
+                                instrutores_paginados.total }} instrutores.</p>
+                            <div class="flex items-center space-x-1">
+                                <a href="{{ url_for('main.instrutores', page=instrutores_paginados.prev_num, busca=termo_busca) if instrutores_paginados.has_prev else '#' }}"
+                                    class="{{ 'pointer-events-none opacity-50' if not instrutores_paginados.has_prev }} px-3 py-2 border rounded-lg">Anterior</a>
+                                {% for page_num in instrutores_paginados.iter_pages(left_edge=1, right_edge=1,
+                                left_current=1, right_current=2) %}
+                                {% if page_num %}<a
+                                    href="{{ url_for('main.instrutores', page=page_num, busca=termo_busca) }}"
+                                    class="{{ 'bg-blue-600 text-white' if page_num == instrutores_paginados.page else 'bg-white' }} px-3 py-2 border rounded-lg">{{
+                                    page_num }}</a>
+                                {% else %}<span class="px-3 py-2">...</span>{% endif %}
+                                {% endfor %}
+                                <a href="{{ url_for('main.instrutores', page=instrutores_paginados.next_num, busca=termo_busca) if instrutores_paginados.has_next else '#' }}"
+                                    class="{{ 'pointer-events-none opacity-50' if not instrutores_paginados.has_next }} px-3 py-2 border rounded-lg">Próximo</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -89,4 +139,5 @@
         </div>
     </div>
 </body>
+
 </html>

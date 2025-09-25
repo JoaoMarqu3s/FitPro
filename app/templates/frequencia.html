@@ -67,7 +67,7 @@
                                             {{ registro.membro.nome }}
                                         </a>
                                     </div>
-                                    <div class="text-sm text-gray-600">Entrada: {{ registro.data_hora.strftime('%H:%M') }}</div>
+                                    <div class="text-sm text-gray-600">Entrada: {{ registro.data_hora | localtime_timeonly }}</div>
                                 </div>
                                 {% if registro.status == 'Liberado' %}
                                     <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">Liberado</span>

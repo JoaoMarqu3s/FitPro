@@ -5,12 +5,13 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from config import Config
+from datetime import datetime, timedelta
 
 # 1. Inicializa as extensões globalmente
 db = SQLAlchemy()
 migrate = Migrate()
-login = LoginManager() # <-- ESTA LINHA ESTAVA FALTANDO
-login.login_view = 'main.login' # <-- E ESTA TAMBÉM (informa qual é a rota de login)
+login = LoginManager()
+login.login_view = 'main.login'
 
 def create_app(config_class=Config):
     """
@@ -23,6 +24,27 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
+
+    # --- Início da Seção dos Filtros de Template ---
+    
+    # Filtro para formatar data e hora completa (ex: 24/09/2025 às 23:18)
+    def format_datetime_local(utc_datetime):
+        if utc_datetime is None:
+            return ""
+        # Subtrai 3 horas do tempo UTC para converter para o fuso de São Paulo (UTC-3)
+        local_time = utc_datetime - timedelta(hours=3)
+        return local_time.strftime('%d/%m/%Y às %H:%M')
+    app.jinja_env.filters['localtime'] = format_datetime_local
+
+    # Novo filtro apenas para a hora (ex: 23:18)
+    def format_time_local(utc_datetime):
+        if utc_datetime is None:
+            return ""
+        local_time = utc_datetime - timedelta(hours=3)
+        return local_time.strftime('%H:%M')
+    app.jinja_env.filters['localtime_timeonly'] = format_time_local
+    
+    # --- Fim da Seção dos Filtros ---
 
     # 3. Importa e registra os blueprints (nossas rotas)
     from . import routes, models
