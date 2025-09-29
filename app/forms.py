@@ -64,7 +64,7 @@ class NovaMatriculaForm(FlaskForm):
 
 
 class CheckinForm(FlaskForm):
-    busca = StringField('Buscar Aluno por Nome ou CPF', validators=[DataRequired()])
+    busca = StringField('Registrar Entrada do Aluno por Nome ou CPF', validators=[DataRequired()])
     submit = SubmitField('Registrar Entrada')
 
 

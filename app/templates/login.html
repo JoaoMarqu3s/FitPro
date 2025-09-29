@@ -1,19 +1,24 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
-    <title>Login - FitPro</title>
+    <title>Login - GymFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-100 flex items-center justify-center h-screen">
     <div class="w-full max-w-md bg-white rounded-lg shadow-md p-8">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">FitPro Academia</h2>
+        <div class="flex justify-center mb-6">
+            <img src="{{ url_for('static', filename='images/GymFlow.png') }}" alt="Logo" class="w-60 h-auto">
+        </div>
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">{{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
         {% endwith %}
         <form method="POST" action="{{ url_for('main.login') }}" novalidate>
             {{ form.hidden_tag() }}
@@ -32,4 +37,5 @@
         </form>
     </div>
 </body>
+
 </html>

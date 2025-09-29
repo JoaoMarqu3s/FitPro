@@ -24,6 +24,12 @@ class Config:
     # Desconto em porcentagem para pagamentos à vista (PIX/Débito)
     DESCONTO_A_VISTA = 10.0 
 
+    MAIL_SERVER = 'smtp.googlemail.com'
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+
 
     
     

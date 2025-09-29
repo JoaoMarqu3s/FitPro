@@ -7,6 +7,8 @@ import qrcode
 import io
 import calendar
 import pandas as pd
+from flask_mail import Message
+from app import mail
 
 from . import db
 from .models import Membro, Aviso, Plano, Matricula, Frequencia, Instrutor, Pagamento, User, Treino
@@ -671,18 +673,17 @@ def frequencia():
 @login_required
 def financeiro():
     page = request.args.get('page', 1, type=int)
-    # Pega os filtros da URL. Se não existirem, o padrão é 'todos'.
     filtro_status = request.args.get('status', 'todos')
     filtro_periodo = request.args.get('periodo', 'todos')
+    ordem = request.args.get('ordem', 'recentes') # Novo: Pega o parâmetro de ordenação
 
-    # Começa com a consulta base de todos os pagamentos
     query = Pagamento.query
 
-    # --- Aplica o filtro de STATUS ---
+    # Filtro de STATUS (sem alteração)
     if filtro_status != 'todos':
         query = query.filter(Pagamento.status == filtro_status)
 
-    # --- Aplica o filtro de PERÍODO ---
+    # --- LÓGICA DE FILTRO DE PERÍODO ATUALIZADA ---
     hoje_utc = datetime.utcnow()
     hoje_local = hoje_utc - timedelta(hours=3)
 
@@ -690,36 +691,67 @@ def financeiro():
         inicio_mes = hoje_local.replace(day=1)
         _, ultimo_dia = calendar.monthrange(inicio_mes.year, inicio_mes.month)
         fim_mes = hoje_local.replace(day=ultimo_dia)
-        
-        # Converte o intervalo local para UTC para a consulta
         inicio_utc = datetime.combine(inicio_mes, datetime.min.time()) + timedelta(hours=3)
         fim_utc = datetime.combine(fim_mes, datetime.max.time()) + timedelta(hours=3)
         query = query.filter(Pagamento.data_pagamento.between(inicio_utc, fim_utc))
-
-    elif filtro_periodo == 'mes_passado':
-        primeiro_dia_mes_atual = hoje_local.replace(day=1)
-        ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
-        primeiro_dia_mes_anterior = ultimo_dia_mes_anterior.replace(day=1)
-
-        inicio_utc = datetime.combine(primeiro_dia_mes_anterior, datetime.min.time()) + timedelta(hours=3)
-        fim_utc = datetime.combine(ultimo_dia_mes_anterior, datetime.max.time()) + timedelta(hours=3)
+    elif filtro_periodo == 'ultimos_3_meses':
+        fim_utc = hoje_utc
+        # Aproximação de 3 meses (90 dias)
+        inicio_utc = hoje_utc - timedelta(days=90)
         query = query.filter(Pagamento.data_pagamento.between(inicio_utc, fim_utc))
+    elif filtro_periodo == 'ultimos_6_meses':
+        fim_utc = hoje_utc
+        # Aproximação de 6 meses (180 dias)
+        inicio_utc = hoje_utc - timedelta(days=180)
+        query = query.filter(Pagamento.data_pagamento.between(inicio_utc, fim_utc))
+    elif filtro_periodo == 'este_ano':
+        inicio_ano = hoje_local.replace(month=1, day=1)
+        inicio_utc = datetime.combine(inicio_ano, datetime.min.time()) + timedelta(hours=3)
+        fim_utc = datetime.utcnow() # Até o momento atual
+        query = query.filter(Pagamento.data_pagamento.between(inicio_utc, fim_utc))
+    # 'todos' não precisa de filtro de data
 
-    # Aplica a ordenação e a paginação no final
-    pagamentos_paginados = query.order_by(Pagamento.data_pagamento.desc()).paginate(page=page, per_page=5)
+    # --- LÓGICA DE ORDENAÇÃO ADICIONADA ---
+    if ordem == 'antigos':
+        query = query.order_by(Pagamento.data_pagamento.asc())
+    else: # Padrão é 'recentes'
+        query = query.order_by(Pagamento.data_pagamento.desc())
+
+    pagamentos_paginados = query.paginate(page=page, per_page=15)
     
     return render_template('financeiro.html', 
                            pagamentos_paginados=pagamentos_paginados,
                            filtro_status_ativo=filtro_status,
-                           filtro_periodo_ativo=filtro_periodo)
+                           filtro_periodo_ativo=filtro_periodo,
+                           ordem_ativa=ordem) # Envia a ordenação para o template
+
+# --- NOVA ROTA PARA EXCLUIR PAGAMENTOS ---
+@bp.route('/pagamento/<int:pagamento_id>/excluir', methods=['POST'])
+@login_required
+def excluir_pagamento(pagamento_id):
+    pagamento = Pagamento.query.get_or_404(pagamento_id)
+    # Apenas admins podem excluir
+    if current_user.role != 'admin':
+        flash('Acesso não autorizado.', 'danger')
+        return redirect(url_for('main.financeiro'))
+        
+    db.session.delete(pagamento)
+    db.session.commit()
+    flash('Registro de pagamento removido do histórico.', 'success')
+    return redirect(request.referrer or url_for('main.financeiro'))
 
 @bp.route('/pagamento/<int:pagamento_id>/confirmar', methods=['POST'])
 @login_required
 def confirmar_pagamento(pagamento_id):
     pagamento = Pagamento.query.get_or_404(pagamento_id)
     pagamento.status = 'Confirmado'
+    
+    # --- LINHA ADICIONADA PARA CORRIGIR O BUG ---
+    # Garante que a matrícula associada seja marcada como 'Ativa'
+    pagamento.matricula.status = 'Ativa'
+    
     db.session.commit()
-    flash('Pagamento confirmado com sucesso!', 'success')
+    flash('Pagamento confirmado e matrícula ativada com sucesso!', 'success')
     return redirect(url_for('main.financeiro'))
 
 @bp.route('/pagamento/<int:pagamento_id>/cancelar', methods=['POST'])
@@ -827,3 +859,33 @@ def excluir_aviso(aviso_id):
     db.session.commit()
     flash('Aviso excluído com sucesso.', 'success')
     return redirect(url_for('main.gerenciar_avisos'))
+
+@bp.route('/aluno/<int:aluno_id>/enviar-qrcode', methods=['POST'])
+@login_required
+def enviar_qrcode(aluno_id):
+    aluno = Membro.query.get_or_404(aluno_id)
+
+    # Gera a imagem do QR Code em memória (mesma lógica da outra rota)
+    qr_data = url_for('main.api_checkin', aluno_id=aluno.id, _external=True)
+    qr_img = qrcode.make(qr_data)
+    buf = io.BytesIO()
+    qr_img.save(buf)
+    buf.seek(0)
+
+    # Cria e envia o e-mail
+    try:
+        msg = Message(
+            subject='Seu Acesso GymFlow',
+            sender=('GymFlow', current_app.config['MAIL_USERNAME']),
+            recipients=[aluno.email]
+        )
+        msg.body = f'Olá, {aluno.nome}! Use o QR Code em anexo para fazer seu check-in na academia.'
+        # Anexa a imagem do QR Code gerada em memória
+        msg.attach('qrcode.png', 'image/png', buf.read())
+
+        mail.send(msg)
+        flash(f'QR Code enviado com sucesso para o e-mail {aluno.email}!', 'success')
+    except Exception as e:
+        flash(f'Erro ao enviar e-mail: {e}', 'danger')
+
+    return redirect(url_for('main.aluno_detalhe', aluno_id=aluno.id))

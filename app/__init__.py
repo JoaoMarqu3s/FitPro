@@ -6,12 +6,14 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from config import Config
 from datetime import datetime, timedelta
+from flask_mail import Mail # Adicione esta importação
 
 # 1. Inicializa as extensões globalmente
 db = SQLAlchemy()
 migrate = Migrate()
 login = LoginManager()
 login.login_view = 'main.login'
+mail = Mail()
 
 def create_app(config_class=Config):
     """
@@ -24,6 +26,7 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
+    mail.init_app(app)
 
     # --- Início da Seção dos Filtros de Template ---
     
