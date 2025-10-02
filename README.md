@@ -1,9 +1,9 @@
-<h1>📘 Documentação de Configuração do Projeto FitPro Academia</h1>
+<h1>📘 Documentação de Configuração do Projeto GymFlow</h1>
   <p>
     Este guia descreve os passos necessários para configurar e rodar o ambiente de desenvolvimento 
     do sistema de gestão de academias <strong>FitPro</strong> em um novo computador.
   </p>
-
+  
   <h2>1. Pré-requisitos</h2>
   <p>Antes de começar, garanta que você tenha os seguintes softwares instalados na sua máquina:</p>
   <ul>
