@@ -28,6 +28,7 @@
                         <form method="POST" action="{{ url_for('main.enviar_qrcode', aluno_id=aluno.id) }}">
                             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg">Enviar por E-mail</button>
                         </form>
+                        <p class="mt-4 text-gray-700">PIN de Acesso: <span class="font-bold text-lg tracking-widest bg-gray-100 p-2 rounded-md">{{ aluno.pin }}</span></p>
                     </div>
                 </div>
             </div>

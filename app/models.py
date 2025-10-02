@@ -15,6 +15,7 @@ class Membro(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(150), nullable=False)
     cpf = db.Column(db.String(14), unique=True, nullable=False)
+    pin = db.Column(db.String(5), unique=True, nullable=False)
     data_nascimento = db.Column(db.Date, nullable=False)
     endereco = db.Column(db.String(250))
     telefone = db.Column(db.String(20), nullable=False)

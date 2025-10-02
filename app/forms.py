@@ -15,6 +15,7 @@ from .models import Membro
 class CadastroAlunoForm(FlaskForm):
     nome = StringField('Nome Completo', validators=[DataRequired(), Length(min=3, max=150)])
     cpf = StringField('CPF', validators=[DataRequired(), Length(min=11, max=14)])
+    pin = StringField('PIN de 5 Dígitos', validators=[DataRequired(), Length(min=5, max=5)])
     data_nascimento = DateField('Data de Nascimento', format='%Y-%m-%d', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     telefone = StringField('Telefone', validators=[DataRequired(), Length(min=10, max=20)])

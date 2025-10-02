@@ -1,8 +1,8 @@
-"""Criação inicial do banco de dados
+"""Criacao inicial do banco
 
-Revision ID: aeeece716794
+Revision ID: 05c95ee59e15
 Revises: 
-Create Date: 2025-09-25 02:50:12.065368
+Create Date: 2025-10-02 18:30:20.930118
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'aeeece716794'
+revision = '05c95ee59e15'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -40,6 +40,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('nome', sa.String(length=150), nullable=False),
     sa.Column('cpf', sa.String(length=14), nullable=False),
+    sa.Column('pin', sa.String(length=5), nullable=False),
     sa.Column('data_nascimento', sa.Date(), nullable=False),
     sa.Column('endereco', sa.String(length=250), nullable=True),
     sa.Column('telefone', sa.String(length=20), nullable=False),
@@ -47,7 +48,8 @@ def upgrade():
     sa.Column('data_cadastro', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('cpf'),
-    sa.UniqueConstraint('email')
+    sa.UniqueConstraint('email'),
+    sa.UniqueConstraint('pin')
     )
     op.create_table('plano',
     sa.Column('id', sa.Integer(), nullable=False),

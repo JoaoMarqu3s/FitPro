@@ -1,41 +1,62 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - GymFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); body { font-family: 'Inter', sans-serif; }</style>
 </head>
+<body class="bg-gray-100">
+    <div class="flex items-center justify-center min-h-screen p-4 sm:p-6">
+        
+        <div class="w-full max-w-md bg-white sm:rounded-lg sm:shadow-md p-8">
+            
+            <div class="flex justify-center mb-1"> 
+                <img src="{{ url_for('static', filename='images/GymFlow.png') }}" alt="Logo" class="w-60 h-auto">
+            </div>
 
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-    <div class="w-full max-w-md bg-white rounded-lg shadow-md p-8">
-        <div class="flex justify-center mb-6">
-            <img src="{{ url_for('static', filename='images/GymFlow.png') }}" alt="Logo" class="w-60 h-auto">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <p class="text-center text-gray-600 mb-4 font-semibold">Acesso para Gestão</p>
+
+            <form method="POST" action="{{ url_for('main.login') }}" novalidate>
+                {{ form.hidden_tag() }}
+                <div class="mb-4">
+                    {{ form.username.label(class="block text-gray-700 text-sm font-bold mb-2") }}
+                    {{ form.username(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700") }}
+                </div>
+                <div class="mb-6">
+                    {{ form.password.label(class="block text-gray-700 text-sm font-bold mb-2") }}
+                    {{ form.password(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700") }}
+                </div>
+                <div class="flex items-center justify-between">
+                    {{ form.submit(class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded") }}
+                    <div class="ml-4">{{ form.remember_me() }} {{ form.remember_me.label }}</div>
+                </div>
+            </form>
+            
+            <div class="relative flex py-5 items-center">
+                <div class="flex-grow border-t border-gray-300"></div>
+                <span class="flex-shrink mx-4 text-gray-400 text-sm">OU</span>
+                <div class="flex-grow border-t border-gray-300"></div>
+            </div>
+
+            <a href="{{ url_for('main.quiosque') }}" class="w-full flex items-center justify-center bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16M12 4v16m-8-8h16" transform="rotate(45 12 12)"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM16 16h4v4h-4z"/>
+                </svg>
+                Leitor de QR Code
+            </a>
         </div>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">{{ message }}
-        </div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
-        <form method="POST" action="{{ url_for('main.login') }}" novalidate>
-            {{ form.hidden_tag() }}
-            <div class="mb-4">
-                {{ form.username.label(class="block text-gray-700 text-sm font-bold mb-2") }}
-                {{ form.username(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700") }}
-            </div>
-            <div class="mb-6">
-                {{ form.password.label(class="block text-gray-700 text-sm font-bold mb-2") }}
-                {{ form.password(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700") }}
-            </div>
-            <div class="flex items-center justify-between">
-                {{ form.submit(class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded") }}
-                <div class="ml-4">{{ form.remember_me() }} {{ form.remember_me.label }}</div>
-            </div>
-        </form>
     </div>
 </body>
-
 </html>

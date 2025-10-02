@@ -1,5 +1,5 @@
-<div class="border-b border-gray-200">
-    <nav class="flex space-x-0">
+<div class="overflow-x-auto">
+    <nav class="flex space-x-0 min-w-max">
         <a href="{{ url_for('main.index') }}" id="tab-dashboard" class="tab-button flex-1 py-4 px-4 text-center font-medium">
             <div class="flex items-center justify-center space-x-2"><span>🏠</span><span>Dashboard</span></div>
         </a>
@@ -17,7 +17,9 @@
         </a>
 
         {% if current_user.is_authenticated and current_user.role == 'admin' %}
-        
+        <a href="{{ url_for('main.financeiro') }}" id="tab-financeiro" class="tab-button flex-1 py-4 px-4 text-center font-medium">
+            <div class="flex items-center justify-center space-x-2"><span>💰</span><span>Financeiro</span></div>
+        </a>
         <a href="{{ url_for('main.instrutores') }}" id="tab-tercerizados" class="tab-button flex-1 py-4 px-4 text-center font-medium">
             <div class="flex items-center justify-center space-x-2"><span>🤝</span><span>Tercerizados</span></div>
         </a>
@@ -27,12 +29,10 @@
         <a href="{{ url_for('main.gerenciar_avisos') }}" id="tab-avisos" class="tab-button flex-1 py-4 px-4 text-center font-medium">
             <div class="flex items-center justify-center space-x-2"><span>📢</span><span>Avisos</span></div>
         </a>
-        <a href="{{ url_for('main.financeiro') }}" id="tab-financeiro" class="tab-button flex-1 py-4 px-4 text-center font-medium">
-            <div class="flex items-center justify-center space-x-2"><span>💰</span><span>Financeiro</span></div>
-        </a>
         {% endif %}
     </nav>
 </div>
+
 
 <script>
     const endpoint = "{{ request.endpoint }}";

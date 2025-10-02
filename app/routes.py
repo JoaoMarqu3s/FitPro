@@ -9,6 +9,7 @@ import calendar
 import pandas as pd
 from flask_mail import Message
 from app import mail
+import random
 
 from . import db
 from .models import Membro, Aviso, Plano, Matricula, Frequencia, Instrutor, Pagamento, User, Treino
@@ -105,7 +106,6 @@ def gerar_qrcode(aluno_id):
     return send_file(buf, mimetype='image/png')
 
 @bp.route('/quiosque')
-@login_required # Apenas usuários logados podem abrir o quiosque
 def quiosque():
     return render_template('quiosque.html')
 
@@ -195,6 +195,7 @@ def novo_aluno():
         novo_membro = Membro(
             nome=form.nome.data,
             cpf=form.cpf.data,
+            pin=form.pin.data, 
             data_nascimento=form.data_nascimento.data,
             email=form.email.data,
             telefone=form.telefone.data
@@ -203,7 +204,18 @@ def novo_aluno():
         db.session.commit()
         flash('Aluno cadastrado com sucesso!', 'success')
         return redirect(url_for('main.cadastro_sucesso', aluno_id=novo_membro.id))
-    return render_template('novo_aluno.html', form=form)
+
+    # --- LÓGICA PARA GERAR SUGESTÕES DE PIN ---
+    sugestoes_pin = []
+    # Pega todos os PINs que já estão em uso
+    pins_existentes = {m.pin for m in Membro.query.with_entities(Membro.pin).all()}
+    while len(sugestoes_pin) < 3:
+        # Gera um número aleatório de 5 dígitos (com zeros à esquerda se necessário)
+        novo_pin = str(random.randint(0, 99999)).zfill(5)
+        if novo_pin not in pins_existentes and novo_pin not in sugestoes_pin:
+            sugestoes_pin.append(novo_pin)
+
+    return render_template('novo_aluno.html', form=form, sugestoes_pin=sugestoes_pin)
 
 @bp.route('/aluno/<int:aluno_id>')
 @login_required
@@ -539,8 +551,8 @@ def _gerar_dados_relatorio(periodo):
         Membro.data_cadastro.between(inicio_periodo_utc, fim_periodo_utc)
     ).scalar()
     receita = db.session.query(func.sum(Pagamento.valor)).filter(
-        Pagamento.status == 'Confirmado',
-        Pagamento.data_pagamento.between(inicio_periodo_utc, fim_periodo_utc)
+    Pagamento.status.in_(['Confirmado', 'Arquivado']),
+    Pagamento.data_pagamento.between(inicio_periodo_utc, fim_periodo_utc)
     ).scalar() or 0.0
 
     relatorio = {
@@ -677,7 +689,7 @@ def financeiro():
     filtro_periodo = request.args.get('periodo', 'todos')
     ordem = request.args.get('ordem', 'recentes') # Novo: Pega o parâmetro de ordenação
 
-    query = Pagamento.query
+    query = Pagamento.query.filter(Pagamento.status != 'Arquivado')
 
     # Filtro de STATUS (sem alteração)
     if filtro_status != 'todos':
@@ -730,14 +742,14 @@ def financeiro():
 @login_required
 def excluir_pagamento(pagamento_id):
     pagamento = Pagamento.query.get_or_404(pagamento_id)
-    # Apenas admins podem excluir
     if current_user.role != 'admin':
         flash('Acesso não autorizado.', 'danger')
         return redirect(url_for('main.financeiro'))
         
-    db.session.delete(pagamento)
+    # --- LÓGICA ALTERADA: EM VEZ DE DELETAR, ARQUIVAMOS ---
+    pagamento.status = 'Arquivado'
     db.session.commit()
-    flash('Registro de pagamento removido do histórico.', 'success')
+    flash('Registro de pagamento arquivado e oculto da lista.', 'success')
     return redirect(request.referrer or url_for('main.financeiro'))
 
 @bp.route('/pagamento/<int:pagamento_id>/confirmar', methods=['POST'])
