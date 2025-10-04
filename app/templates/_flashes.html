@@ -1,0 +1,35 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div id="flash-container" class="space-y-2">
+        {% for category, message in messages %}
+            {% set bg_color = 'bg-green-100 border-green-400 text-green-700' if category == 'success' else ('bg-yellow-100 border-yellow-400 text-yellow-700' if category in ['warning', 'info'] else 'bg-red-100 border-red-400 text-red-700') %}
+
+            <div data-flash class="{{ bg_color }} border px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ message }}</span>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        // Seleciona todas as mensagens de flash
+        const flashMessages = document.querySelectorAll('[data-flash]');
+
+        flashMessages.forEach(function(message) {
+            // Define um temporizador para 5 segundos (5000 milissegundos)
+            setTimeout(function() {
+                // Adiciona uma classe para iniciar a animação de fade-out
+                message.style.transition = 'opacity 0.5s ease';
+                message.style.opacity = '0';
+
+                // Remove o elemento da página após a animação
+                setTimeout(function() {
+                    message.remove();
+                }, 500); // 0.5 segundos, a mesma duração da transição
+
+            }, 5000); // 5 segundos
+        });
+    });
+</script>

@@ -3,6 +3,9 @@
 from flask_wtf import FlaskForm
 from wtforms import (StringField, SubmitField, DateField, TextAreaField, 
                      SelectField, PasswordField, BooleanField)
+from wtforms import (StringField, SubmitField, DateField, TextAreaField, 
+                     SelectField, SelectMultipleField, PasswordField, 
+                     BooleanField, widgets)
 from wtforms.validators import DataRequired, Email, Length, ValidationError
 from datetime import datetime
 from .models import Membro
@@ -100,3 +103,30 @@ class AssociarTreinoForm(FlaskForm):
 class AvisoForm(FlaskForm):
     conteudo = TextAreaField('Conteúdo do Aviso', validators=[DataRequired()], render_kw={"rows": 5})
     submit = SubmitField('Publicar Aviso')
+
+class AnamneseForm(FlaskForm):
+    objetivo = TextAreaField('Qual é o seu principal objetivo com os treinos? (Ex: perder peso, ganhar massa muscular, etc.)', 
+                             validators=[DataRequired()], render_kw={"rows": 3})
+
+    historico_lesoes = TextAreaField('Você tem alguma lesão, dor crônica ou condição médica que devamos saber? (Ex: dor no joelho, cirurgia na coluna, etc.)', 
+                                     render_kw={"rows": 3})
+
+    usa_medicamentos = TextAreaField('Você faz uso de algum medicamento contínuo? Se sim, qual?', 
+                                     render_kw={"rows": 3})
+
+    dias_disponiveis = SelectMultipleField(
+        'Quais dias da semana você geralmente pretende treinar?',
+        choices=[
+            ('Segunda-feira', 'Segunda-feira'),
+            ('Terça-feira', 'Terça-feira'),
+            ('Quarta-feira', 'Quarta-feira'),
+            ('Quinta-feira', 'Quinta-feira'),
+            ('Sexta-feira', 'Sexta-feira'),
+            ('Sábado', 'Sábado'),
+            ('Domingo', 'Domingo')
+        ],
+        widget=widgets.ListWidget(prefix_label=False), 
+        option_widget=widgets.CheckboxInput()
+    )
+
+    submit = SubmitField('Enviar Respostas')

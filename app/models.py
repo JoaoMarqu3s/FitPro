@@ -4,6 +4,7 @@ from . import db
 from datetime import date, datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+import secrets
 
 # Tabela de associação para a relação Muitos-para-Muitos entre Membro e Treino
 treinos_membros = db.Table('treinos_membros',
@@ -21,8 +22,11 @@ class Membro(db.Model):
     telefone = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     data_cadastro = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    status = db.Column(db.String(20), nullable=False, default='Ativo') # Valores: 'Ativo', 'Inativo'
+
 
     # Relacionamentos
+    anamneses = db.relationship('Anamnese', backref='membro', lazy=True, cascade="all, delete-orphan")
     matriculas = db.relationship('Matricula', back_populates='membro', lazy=True, cascade="all, delete-orphan")
     frequencias = db.relationship('Frequencia', back_populates='membro', lazy=True, cascade="all, delete-orphan")
     treinos = db.relationship('Treino', secondary=treinos_membros, back_populates='membros', lazy='dynamic')
@@ -172,3 +176,22 @@ class Aviso(db.Model):
 
     def __repr__(self):
         return f'<Aviso "{self.conteudo[:20]}...">'
+    
+class Anamnese(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Campos do formulário
+    objetivo = db.Column(db.Text)
+    historico_lesoes = db.Column(db.Text)
+    usa_medicamentos = db.Column(db.Text)
+    dias_disponiveis = db.Column(db.String(100))
+
+    # Campos de controle e segurança
+    data_preenchimento = db.Column(db.DateTime)
+    token = db.Column(db.String(32), unique=True, nullable=False, default=lambda: secrets.token_hex(16))
+
+    # Chave estrangeira para o aluno
+    membro_id = db.Column(db.Integer, db.ForeignKey('membro.id'), nullable=False)
+
+    def __repr__(self):
+        return f'<Anamnese do Membro ID {self.membro_id}>'

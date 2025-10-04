@@ -1,8 +1,8 @@
-"""Criacao inicial do banco
+"""Criação inicial do banco de dados
 
-Revision ID: 05c95ee59e15
+Revision ID: 56e096168c91
 Revises: 
-Create Date: 2025-10-02 18:30:20.930118
+Create Date: 2025-10-04 13:22:55.660491
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '05c95ee59e15'
+revision = '56e096168c91'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -46,6 +46,7 @@ def upgrade():
     sa.Column('telefone', sa.String(length=20), nullable=False),
     sa.Column('email', sa.String(length=150), nullable=False),
     sa.Column('data_cadastro', sa.DateTime(), nullable=False),
+    sa.Column('status', sa.String(length=20), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('cpf'),
     sa.UniqueConstraint('email'),
@@ -72,6 +73,19 @@ def upgrade():
         batch_op.create_index(batch_op.f('ix_user_email'), ['email'], unique=True)
         batch_op.create_index(batch_op.f('ix_user_username'), ['username'], unique=True)
 
+    op.create_table('anamnese',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('objetivo', sa.Text(), nullable=True),
+    sa.Column('historico_lesoes', sa.Text(), nullable=True),
+    sa.Column('usa_medicamentos', sa.Text(), nullable=True),
+    sa.Column('dias_disponiveis', sa.String(length=100), nullable=True),
+    sa.Column('data_preenchimento', sa.DateTime(), nullable=True),
+    sa.Column('token', sa.String(length=32), nullable=False),
+    sa.Column('membro_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['membro_id'], ['membro.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('token')
+    )
     op.create_table('frequencia',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('data_hora', sa.DateTime(), nullable=False),
@@ -129,6 +143,7 @@ def downgrade():
     op.drop_table('treino')
     op.drop_table('matricula')
     op.drop_table('frequencia')
+    op.drop_table('anamnese')
     with op.batch_alter_table('user', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_user_username'))
         batch_op.drop_index(batch_op.f('ix_user_email'))

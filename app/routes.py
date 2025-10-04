@@ -12,9 +12,10 @@ from app import mail
 import random
 
 from . import db
-from .models import Membro, Aviso, Plano, Matricula, Frequencia, Instrutor, Pagamento, User, Treino
+from .models import (Membro, Plano, Matricula, Frequencia, Instrutor, 
+                     Pagamento, User, Treino, Aviso, Anamnese) # Adicione Anamnese aqui
 from .forms import (CadastroAlunoForm, NovaMatriculaForm, CheckinForm, 
-                    InstrutorForm, AvisoForm, LoginForm, TreinoForm, AssociarTreinoForm)
+                    InstrutorForm, AvisoForm, LoginForm, TreinoForm, AssociarTreinoForm, AnamneseForm)
 
 
 
@@ -166,7 +167,7 @@ def lista_alunos():
     # Novo: Pega o parâmetro de ordenação da URL. O padrão é 'nome'.
     ordem = request.args.get('ordem', 'nome')
     
-    query = Membro.query
+    query = Membro.query.filter_by(status='Ativo')
     if termo_busca:
         query = query.filter(
             or_(Membro.nome.ilike(f'%{termo_busca}%'), Membro.cpf == termo_busca)
@@ -251,11 +252,50 @@ def editar_aluno(aluno_id):
 @login_required
 def excluir_aluno(aluno_id):
     aluno = Membro.query.get_or_404(aluno_id)
-    db.session.delete(aluno)
+    
+    # --- LÓGICA ALTERADA: EM VEZ DE DELETAR, INATIVAMOS ---
+    aluno.status = 'Inativo'
+    
+    # Opcional: inativar também as matrículas ativas dele
+    for matricula in aluno.matriculas:
+        if 'Ativa' in matricula.status_dinamico or 'Vence' in matricula.status_dinamico:
+            matricula.status = 'Cancelada'
+
     db.session.commit()
-    flash('Aluno excluído com sucesso!', 'success')
+    flash(f'Aluno "{aluno.nome}" foi inativado e removido das listas.', 'success')
     return redirect(url_for('main.lista_alunos'))
 
+@bp.route('/aluno/<int:aluno_id>/enviar-anamnese', methods=['POST'])
+@login_required
+def enviar_anamnese(aluno_id):
+    aluno = Membro.query.get_or_404(aluno_id)
+
+    # 1. Cria um novo registro de anamnese vazio no banco.
+    #    O token seguro é gerado automaticamente pelo modelo.
+    nova_anamnese = Anamnese(membro_id=aluno.id)
+    db.session.add(nova_anamnese)
+    db.session.commit()
+
+    # 2. Cria o link único para o formulário usando o token gerado.
+    #    'preencher_anamnese' é a rota que criaremos na próxima fase.
+    link_formulario = url_for('main.preencher_anamnese', token=nova_anamnese.token, _external=True)
+
+    # 3. Envia o e-mail para o aluno com o link
+    try:
+        msg = Message(
+            subject='Complete seu Cadastro - Formulário de Anamnese GymFlow',
+            sender=('GymFlow', current_app.config['MAIL_USERNAME']),
+            recipients=[aluno.email]
+        )
+        # Renderiza o template do e-mail com as variáveis necessárias
+        msg.html = render_template('email/anamnese_invite.html', aluno=aluno, link_formulario=link_formulario)
+
+        mail.send(msg)
+        flash(f'E-mail com o formulário enviado para {aluno.email}!', 'success')
+    except Exception as e:
+        flash(f'Erro ao enviar e-mail: {e}', 'danger')
+
+    return redirect(url_for('main.aluno_detalhe', aluno_id=aluno.id))
 
 # --- Rotas de Gestão de Matrículas e Frequência ---
 # app/routes.py
@@ -276,7 +316,7 @@ def matriculas():
     # --- FIM DAS LINHAS ADICIONADAS ---
     
     # Popula as opções dos menus dropdown
-    form_matricula.membro.choices = [(m.id, m.nome) for m in Membro.query.order_by('nome').all()]
+    form_matricula.membro.choices = [(m.id, m.nome) for m in Membro.query.filter_by(status='Ativo').order_by('nome').all()]
     form_matricula.plano.choices = [(p.id, f"{p.nome} (R$ {p.preco})") for p in planos]
     
     # Lógica de filtros e paginação (continua a mesma)
@@ -329,7 +369,7 @@ def cancelar_matricula(matricula_id):
 @login_required
 def matricular():
     form = NovaMatriculaForm()
-    form.membro.choices = [(m.id, m.nome) for m in Membro.query.order_by('nome').all()]
+    form.membro.choices = [(m.id, m.nome) for m in Membro.query.filter_by(status='Ativo').order_by('nome').all()]
     form.plano.choices = [(p.id, f"{p.nome} (R$ {p.preco})") for p in Plano.query.order_by('nome').all()]
 
     plano_id = request.form.get('plano')
@@ -428,7 +468,7 @@ def treino_detalhe(treino_id):
     treino = Treino.query.get_or_404(treino_id)
     form = AssociarTreinoForm()
     alunos_associados_ids = {membro.id for membro in treino.membros}
-    alunos_disponiveis = Membro.query.filter(Membro.id.notin_(alunos_associados_ids)).order_by(Membro.nome).all()
+    alunos_disponiveis = Membro.query.filter(Membro.status == 'Ativo', Membro.id.notin_(alunos_associados_ids)).order_by(Membro.nome).all()
     form.membro.choices = [(a.id, a.nome) for a in alunos_disponiveis]
     return render_template('treino_detalhe.html', treino=treino, form=form)
 
@@ -438,7 +478,7 @@ def associar_aluno_treino(treino_id):
     treino = Treino.query.get_or_404(treino_id)
     form = AssociarTreinoForm()
     alunos_associados_ids = {membro.id for membro in treino.membros}
-    alunos_disponiveis = Membro.query.filter(Membro.id.notin_(alunos_associados_ids)).order_by(Membro.nome).all()
+    alunos_disponiveis = Membro.query.filter(Membro.status == 'Ativo', Membro.id.notin_(alunos_associados_ids)).order_by(Membro.nome).all()
     form.membro.choices = [(a.id, a.nome) for a in alunos_disponiveis]
     if form.validate_on_submit():
         aluno = Membro.query.get_or_404(form.membro.data)
@@ -901,3 +941,30 @@ def enviar_qrcode(aluno_id):
         flash(f'Erro ao enviar e-mail: {e}', 'danger')
 
     return redirect(url_for('main.aluno_detalhe', aluno_id=aluno.id))
+
+
+@bp.route('/formulario/<string:token>', methods=['GET', 'POST'])
+def preencher_anamnese(token):
+    # Procura pela anamnese usando o token seguro
+    anamnese = Anamnese.query.filter_by(token=token).first_or_404()
+
+    # Se o formulário já foi preenchido, mostra uma mensagem de erro/aviso
+    if anamnese.data_preenchimento is not None:
+        flash('Este formulário já foi preenchido e não pode ser alterado.', 'warning')
+        return render_template('formulario_sucesso.html', mensagem="Formulário já respondido.")
+
+    form = AnamneseForm()
+    if form.validate_on_submit():
+        # Popula o objeto anamnese com os dados do formulário
+        anamnese.objetivo = form.objetivo.data
+        anamnese.historico_lesoes = form.historico_lesoes.data
+        anamnese.usa_medicamentos = form.usa_medicamentos.data
+        anamnese.dias_disponiveis = ', '.join(form.dias_disponiveis.data) # Junta os dias selecionados
+        
+        # Marca a data de preenchimento para invalidar o token
+        anamnese.data_preenchimento = datetime.utcnow()
+        
+        db.session.commit()
+        return render_template('formulario_sucesso.html', mensagem="Obrigado por suas respostas!")
+
+    return render_template('preencher_anamnese.html', form=form, aluno=anamnese.membro)

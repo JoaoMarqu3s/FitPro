@@ -1,36 +1,104 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <title>Detalhes de {{ aluno.nome }} - GymFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); body { font-family: 'Inter', sans-serif; }</style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
 </head>
+
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
     {% include '_header.html' %}
     <div class="max-w-4xl mx-auto px-6 py-8">
+        <div class="mb-4">
+            {% include '_flashes.html' %}
+        </div>
         <div class="bg-white rounded-xl shadow-lg p-8">
             <div class="flex justify-between items-start mb-6">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-800">{{ aluno.nome }}</h1>
                     <p class="text-md text-gray-600 mt-2">{{ aluno.email }} | {{ aluno.telefone }}</p>
                 </div>
-                <a href="{{ url_for('main.editar_aluno', aluno_id=aluno.id) }}" class="text-blue-600 hover:underline">Editar Dados</a>
+                <a href="{{ url_for('main.editar_aluno', aluno_id=aluno.id) }}"
+                    class="text-blue-600 hover:underline">Editar Dados</a>
+            </div>
+
+            <hr class="my-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                <div class="flex flex-col justify-between h-full">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Acesso do Aluno</h2>
+                        <div class="flex items-center space-x-4">
+                            <img src="{{ url_for('main.gerar_qrcode', aluno_id=aluno.id) }}" alt="QR Code"
+                                class="w-24 h-24 border rounded-lg p-1 bg-white flex-shrink-0">
+                            <div>
+                                <p class="text-gray-700">PIN de Acesso:</p>
+                                <p class="font-bold text-2xl tracking-widest text-gray-800">{{ aluno.pin }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ url_for('main.enviar_qrcode', aluno_id=aluno.id) }}" class="mt-4">
+                        <button type="submit"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg w-full md:w-auto">
+                            Enviar QR Code por E-mail
+                        </button>
+                    </form>
+                </div>
+
+                <div class="flex flex-col justify-between h-full">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Formulário de Anamnese</h2>
+                        <p class="text-gray-600 mb-4 text-sm">Envie um link para o aluno preencher o formulário de
+                            saúde.</p>
+                    </div>
+                    <form method="POST" action="{{ url_for('main.enviar_anamnese', aluno_id=aluno.id) }}" class="mt-4">
+                        <button type="submit"
+                            class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg w-full md:w-auto">
+                            Enviar Formulário
+                        </button>
+                    </form>
+                </div>
+
             </div>
 
             <hr class="my-6">
             <div>
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">QR Code de Acesso</h2>
-                <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-8">
-                    <img src="{{ url_for('main.gerar_qrcode', aluno_id=aluno.id) }}" alt="QR Code" class="w-32 h-32 border rounded-lg p-1 bg-white">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Respostas da Anamnese</h2>
+                {% set anamnese_recente =
+                aluno.anamneses|selectattr('data_preenchimento')|sort(attribute='data_preenchimento',
+                reverse=true)|first %}
+                {% if anamnese_recente %}
+                <div class="bg-gray-50 p-4 rounded-lg border space-y-4 text-sm">
+                    <p class="text-xs text-gray-500">Preenchido em: <span class="font-medium">{{
+                            anamnese_recente.data_preenchimento | localtime }}</span></p>
                     <div>
-                        <p class="text-gray-600 mb-4">Clique no botão abaixo para enviar este QR Code para o e-mail cadastrado do aluno ({{ aluno.email }}).</p>
-                        <form method="POST" action="{{ url_for('main.enviar_qrcode', aluno_id=aluno.id) }}">
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg">Enviar por E-mail</button>
-                        </form>
-                        <p class="mt-4 text-gray-700">PIN de Acesso: <span class="font-bold text-lg tracking-widest bg-gray-100 p-2 rounded-md">{{ aluno.pin }}</span></p>
+                        <h4 class="font-semibold text-gray-800">Objetivo:</h4>
+                        <p class="text-gray-700">{{ anamnese_recente.objetivo or 'Não informado' }}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Lesões / Condições Médicas:</h4>
+                        <p class="text-gray-700">{{ anamnese_recente.historico_lesoes or 'Não informado' }}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Medicamentos:</h4>
+                        <p class="text-gray-700">{{ anamnese_recente.usa_medicamentos or 'Não informado' }}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Disponibilidade:</h4>
+                        <p class="text-gray-700">{{ anamnese_recente.dias_disponiveis or 'Não informado' }}</p>
                     </div>
                 </div>
+                {% else %}
+                <p class="text-gray-500 italic text-sm">Nenhum formulário de anamnese preenchido.</p>
+                {% endif %}
             </div>
 
             <hr class="my-6">
@@ -38,112 +106,112 @@
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Histórico de Frequência (Últimos 3 Check-ins)</h2>
                 <div class="space-y-3">
                     {% set checkins_encontrados = [] %}
-                    {% for registro in aluno.frequencias | selectattr('tipo', 'equalto', 'Entrada') | sort(attribute='data_hora', reverse=true) %}
-                        {% set _ = checkins_encontrados.append(registro) %}
-                        {% if loop.index <= 3 %}
-                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
-                            <p class="text-gray-700 font-medium">{{ registro.data_hora | localtime }}</p>
-                            {% if registro.status == 'Liberado' %}<span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">Liberado</span>
-                            {% else %}<span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-semibold">Bloqueado</span>{% endif %}
-                        </div>
-                        {% endif %}
-                    {% endfor %}
-                    {% if not checkins_encontrados %}
-                        <p class="text-gray-500 italic">Nenhum histórico de check-in para este aluno.</p>
-                    {% endif %}
+                    {% for registro in aluno.frequencias | selectattr('tipo', 'equalto', 'Entrada') |
+                    sort(attribute='data_hora', reverse=true) %}
+                    {% set _ = checkins_encontrados.append(registro) %}
+                    {% if loop.index <= 3 %} <div
+                        class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <p class="text-gray-700 font-medium">{{ registro.data_hora | localtime }}</p>
+                        {% if registro.status == 'Liberado' %}<span
+                            class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">Liberado</span>
+                        {% else %}<span
+                            class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-semibold">Bloqueado</span>{%
+                        endif %}
                 </div>
-            </div>
-            
-            <hr class="my-6">
-
-            <div>
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Matrículas do Aluno</h2>
-                <h3 class="text-lg font-medium text-gray-700 mb-2">Ativas</h3>
-                <div class="space-y-3">
-                    {% set found_ativa = false %}
-                    {% for matricula in aluno.matriculas %}
-                        {% if 'Ativa' in matricula.status_dinamico or 'Vence' in matricula.status_dinamico %}
-                            {% set found_ativa = true %}
-                            <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                <div>
-                                    <div class="font-medium text-gray-800">{{ matricula.plano.nome }}</div>
-                                    <div class="text-sm text-gray-600">Vence em: {{ matricula.data_fim.strftime('%d/%m/%Y') }}</div>
-                                </div>
-                                <div class="flex items-center space-x-4">
-                                    {% set status = matricula.status_dinamico %}
-                                    {% set cor_status = 'bg-green-100 text-green-800' %}
-                                    {% if 'Vence' in status %}{% set cor_status = 'bg-yellow-100 text-yellow-800' %}{% endif %}
-                                    <span class="{{ cor_status }} px-2 py-1 rounded-full text-xs font-semibold">{{ status }}</span>
-                                    <form method="POST" action="{{ url_for('main.cancelar_matricula', matricula_id=matricula.id) }}" onsubmit="return confirm('Tem certeza que deseja cancelar esta matrícula?');">
-                                        <button type="submit" class="text-red-500 hover:text-red-700 font-medium text-sm">Cancelar</button>
-                                    </form>
-                                </div>
-                            </div>
-                            {% endif %}
-                    {% endfor %}
-                    {% if not found_ativa %}
-                        <p class="text-gray-500 italic">Nenhuma matrícula ativa no momento.</p>
-                    {% endif %}
-                </div>
-
-                <h3 class="text-lg font-medium text-gray-700 mt-6 mb-2">Histórico</h3>
-                <div class="space-y-3">
-                    {% set found_historico = false %}
-                    {% for matricula in aluno.matriculas %}
-                        {% if 'Vencida' in matricula.status_dinamico or 'Cancelada' in matricula.status_dinamico %}
-                            {% set found_historico = true %}
-                            <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200 opacity-70">
-                                <div>
-                                    <div class="font-medium text-gray-800">{{ matricula.plano.nome }}</div>
-                                    <div class="text-sm text-gray-600">Período: {{ matricula.data_inicio.strftime('%d/%m/%Y') }} - {{ matricula.data_fim.strftime('%d/%m/%Y') }}</div>
-                                </div>
-                                <div class="flex items-center space-x-4">
-                                    {% set status = matricula.status_dinamico %}
-                                    {% set cor_status = 'bg-red-100 text-red-800' %}
-                                    {% if 'Cancelada' in status %}{% set cor_status = 'bg-gray-200 text-gray-600' %}{% endif %}
-                                    <span class="{{ cor_status }} px-2 py-1 rounded-full text-xs font-semibold">{{ status }}</span>
-                                    {% if 'Cancelada' in status %}
-                                    <form method="POST" action="{{ url_for('main.excluir_matricula', matricula_id=matricula.id) }}" onsubmit="return confirm('Esta ação é permanente. Tem certeza que deseja remover esta matrícula do histórico?');">
-                                        <button type="submit" class="text-red-500 hover:text-red-700 font-medium text-xs">Remover</button>
-                                    </form>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-                    {% if not found_historico %}
-                        <p class="text-gray-500 italic">Nenhum histórico de matrículas.</p>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <hr class="my-6">
-
-            <div>
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Treinos Associados</h2>
-                <div class="space-y-3">
-                    {% if aluno.treinos.all() %}
-                        {% for treino in aluno.treinos %}
-                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
-                            <a href="{{ url_for('main.treino_detalhe', treino_id=treino.id) }}" class="flex-grow">
-                                <div class="font-medium text-gray-800 hover:text-blue-600">{{ treino.nome }}</div>
-                                <div class="text-sm text-gray-600">Criado por: {{ treino.instrutor.nome }}</div>
-                            </a>
-                            <form method="POST" action="{{ url_for('main.desassociar_aluno_treino', treino_id=treino.id, membro_id=aluno.id) }}" onsubmit="return confirm('Tem certeza que deseja remover este treino do aluno?');">
-                                <button type="submit" class="text-red-500 hover:text-red-700 font-medium text-sm ml-4">Remover</button>
-                            </form>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-gray-500 italic">Nenhum treino associado a este aluno.</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="mt-8">
-                <a href="{{ url_for('main.lista_alunos') }}" class="text-blue-600 hover:underline">&larr; Voltar para a lista de alunos</a>
+                {% endif %}
+                {% endfor %}
+                {% if not checkins_encontrados %}<p class="text-gray-500 italic text-sm">Nenhum histórico de check-in
+                    para este aluno.</p>{% endif %}
             </div>
         </div>
+
+        <hr class="my-6">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Matrículas do Aluno</h2>
+            <h3 class="text-lg font-medium text-gray-700 mb-2">Ativas</h3>
+            <div class="space-y-3">
+                {% set found_ativa = false %}
+                {% for matricula in aluno.matriculas %}
+                {% if 'Ativa' in matricula.status_dinamico or 'Vence' in matricula.status_dinamico %}
+                {% set found_ativa = true %}
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <div>
+                        <div class="font-medium text-gray-800">{{ matricula.plano.nome }}</div>
+                        <div class="text-sm text-gray-600">Vence em: {{ matricula.data_fim.strftime('%d/%m/%Y') }}</div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        {% set status = matricula.status_dinamico %}{% set cor_status = 'bg-green-100 text-green-800'
+                        %}{% if 'Vence' in status %}{% set cor_status = 'bg-yellow-100 text-yellow-800' %}{% endif %}
+                        <span class="{{ cor_status }} px-2 py-1 rounded-full text-xs font-semibold">{{ status }}</span>
+                        <form method="POST" action="{{ url_for('main.cancelar_matricula', matricula_id=matricula.id) }}"
+                            onsubmit="return confirm('Tem certeza?');"><button type="submit"
+                                class="text-red-500 hover:text-red-700 font-medium text-sm">Cancelar</button></form>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+                {% if not found_ativa %}<p class="text-gray-500 italic">Nenhuma matrícula ativa.</p>{% endif %}
+            </div>
+            <h3 class="text-lg font-medium text-gray-700 mt-6 mb-2">Histórico</h3>
+            <div class="space-y-3">
+                {% set found_historico = false %}
+                {% for matricula in aluno.matriculas %}
+                {% if 'Vencida' in matricula.status_dinamico or 'Cancelada' in matricula.status_dinamico %}
+                {% set found_historico = true %}
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border opacity-70">
+                    <div>
+                        <div class="font-medium text-gray-800">{{ matricula.plano.nome }}</div>
+                        <div class="text-sm text-gray-600">Período: {{ matricula.data_inicio.strftime('%d/%m/%Y') }} -
+                            {{ matricula.data_fim.strftime('%d/%m/%Y') }}</div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        {% set status = matricula.status_dinamico %}{% set cor_status = 'bg-red-100 text-red-800' %}{%
+                        if 'Cancelada' in status %}{% set cor_status = 'bg-gray-200 text-gray-600' %}{% endif %}
+                        <span class="{{ cor_status }} px-2 py-1 rounded-full text-xs font-semibold">{{ status }}</span>
+                        {% if 'Cancelada' in status %}
+                        <form method="POST" action="{{ url_for('main.excluir_matricula', matricula_id=matricula.id) }}"
+                            onsubmit="return confirm('Remover permanentemente?');"><button type="submit"
+                                class="text-red-500 hover:text-red-700 font-medium text-xs">Remover</button></form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+                {% if not found_historico %}<p class="text-gray-500 italic">Nenhum histórico.</p>{% endif %}
+            </div>
+        </div>
+
+        <hr class="my-6">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Treinos Associados</h2>
+            <div class="space-y-3">
+                {% if aluno.treinos.all() %}
+                {% for treino in aluno.treinos %}
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <a href="{{ url_for('main.treino_detalhe', treino_id=treino.id) }}" class="flex-grow">
+                        <div class="font-medium text-gray-800 hover:text-blue-600">{{ treino.nome }}</div>
+                        <div class="text-sm text-gray-600">Criado por: {{ treino.instrutor.nome }}</div>
+                    </a>
+                    <form method="POST"
+                        action="{{ url_for('main.desassociar_aluno_treino', treino_id=treino.id, membro_id=aluno.id) }}"
+                        onsubmit="return confirm('Remover este treino do aluno?');">
+                        <button type="submit"
+                            class="text-red-500 hover:text-red-700 font-medium text-sm ml-4">Remover</button>
+                    </form>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-gray-500 italic">Nenhum treino associado a este aluno.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <a href="{{ url_for('main.lista_alunos') }}" class="text-blue-600 hover:underline">&larr; Voltar para a
+                lista de alunos</a>
+        </div>
+    </div>
     </div>
 </body>
+
 </html>

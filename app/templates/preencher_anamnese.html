@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Formulário de Anamnese - GymFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-gray-100">
+    <div class="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg my-10">
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">Formulário de Anamnese</h1>
+        <p class="text-gray-600 mb-6">Olá, {{ aluno.nome }}! Por favor, preencha as informações abaixo.</p>
+        <form method="POST" class="space-y-6">
+            {{ form.hidden_tag() }}
+            <div>
+                {{ form.objetivo.label(class="block text-sm font-medium text-gray-700") }}
+                {{ form.objetivo(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2") }}
+            </div>
+            <div>
+                {{ form.historico_lesoes.label(class="block text-sm font-medium text-gray-700") }}
+                {{ form.historico_lesoes(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2") }}
+            </div>
+            <div>
+                {{ form.usa_medicamentos.label(class="block text-sm font-medium text-gray-700") }}
+                {{ form.usa_medicamentos(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2") }}
+            </div>
+            <div>
+                {{ form.dias_disponiveis.label(class="block text-sm font-medium text-gray-700") }}
+                <div class="mt-2 space-y-2">
+                    {% for subfield in form.dias_disponiveis %}
+                        <label class="flex items-center">
+                            {{ subfield(class="h-4 w-4 text-blue-600 border-gray-300 rounded") }}
+                            <span class="ml-2 text-gray-700">{{ subfield.label.text }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {{ form.submit(class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg") }}
+        </form>
+    </div>
+</body>
+</html>
