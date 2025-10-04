@@ -228,11 +228,12 @@ def aluno_detalhe(aluno_id):
 @login_required
 def editar_aluno(aluno_id):
     aluno = Membro.query.get_or_404(aluno_id)
-    # Passamos o 'aluno' original para o formulário
     form = CadastroAlunoForm(aluno_original=aluno)
 
-    # Quando o formulário é enviado, o WTForms popula o 'form' com os novos dados
+    print(f"--- ROTA editar_aluno ACESSADA (Método: {request.method}) ---")
+
     if form.validate_on_submit():
+        print(">>> VALIDAÇÃO DO FORMULÁRIO: SUCESSO. Salvando dados...")
         aluno.nome = form.nome.data
         aluno.cpf = form.cpf.data
         aluno.data_nascimento = form.data_nascimento.data
@@ -242,8 +243,11 @@ def editar_aluno(aluno_id):
         flash('Dados do aluno atualizados com sucesso!', 'success')
         return redirect(url_for('main.lista_alunos'))
     
-    # Na primeira vez que a página carrega (GET), popula o formulário com os dados existentes
-    elif request.method == 'GET':
+    if request.method == 'POST':
+        print(f">>> VALIDAÇÃO DO FORMULÁRIOS: FALHOU. Erros: {form.errors}")
+
+    if request.method == 'GET':
+        print(">>> Populando formulário para a primeira visualização (GET).")
         form.process(obj=aluno)
 
     return render_template('editar_aluno.html', form=form, aluno=aluno)
@@ -822,9 +826,8 @@ def cancelar_pagamento(pagamento_id):
 @login_required
 def editar_instrutor(instrutor_id):
     instrutor = Instrutor.query.get_or_404(instrutor_id)
-    # Reutilizamos o mesmo formulário, passando o instrutor original para a validação
-    form = InstrutorForm(obj=instrutor)
-    
+    form = InstrutorForm(instrutor_original=instrutor) # Passa o instrutor original
+
     if form.validate_on_submit():
         instrutor.nome = form.nome.data
         instrutor.cpf = form.cpf.data
@@ -834,7 +837,10 @@ def editar_instrutor(instrutor_id):
         db.session.commit()
         flash('Dados do instrutor atualizados com sucesso!', 'success')
         return redirect(url_for('main.instrutores'))
-        
+
+    elif request.method == 'GET':
+        form.process(obj=instrutor)
+
     return render_template('editar_instrutor.html', form=form, instrutor=instrutor)
 
 

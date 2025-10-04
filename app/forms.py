@@ -9,9 +9,12 @@ from wtforms import (StringField, SubmitField, DateField, TextAreaField,
 from wtforms.validators import DataRequired, Email, Length, ValidationError
 from datetime import datetime
 from .models import Membro
+from .models import Instrutor
 # A importação da biblioteca fica comentada até ser necessária
 # from validate_docbr import CPF
 
+
+# app/forms.py
 
 # app/forms.py
 
@@ -24,33 +27,21 @@ class CadastroAlunoForm(FlaskForm):
     telefone = StringField('Telefone', validators=[DataRequired(), Length(min=10, max=20)])
     submit = SubmitField('Cadastrar Aluno')
     
-    # Guarda o aluno original que está sendo editado
     def __init__(self, aluno_original=None, *args, **kwargs):
         super(CadastroAlunoForm, self).__init__(*args, **kwargs)
         self.aluno_original = aluno_original
 
     def validate_cpf(self, cpf):
-        # Lógica de validação matemática (ainda comentada)
-        # ...
-
-        # Se estamos editando e o CPF não mudou, não há o que validar
         if self.aluno_original and self.aluno_original.cpf == cpf.data:
             return
-            
-        # Se o CPF mudou (ou se é um novo aluno), verifica se ele já existe
-        aluno_existente = Membro.query.filter_by(cpf=cpf.data).first()
-        if aluno_existente:
-            raise ValidationError('Este CPF já está cadastrado. Por favor, utilize outro.')
+        if Membro.query.filter_by(cpf=cpf.data).first():
+            raise ValidationError('Este CPF já está cadastrado.')
 
     def validate_email(self, email):
-        # Se estamos editando e o email não mudou, não há o que validar
         if self.aluno_original and self.aluno_original.email == email.data:
             return
-        
-        # Se o email mudou (ou se é um novo aluno), verifica se ele já existe
-        aluno_existente = Membro.query.filter_by(email=email.data).first()
-        if aluno_existente:
-            raise ValidationError('Este e-mail já está cadastrado. Por favor, utilize outro.')
+        if Membro.query.filter_by(email=email.data).first():
+            raise ValidationError('Este e-mail já está cadastrado.')
 
 
 class NovaMatriculaForm(FlaskForm):
@@ -79,6 +70,22 @@ class InstrutorForm(FlaskForm):
     telefone = StringField('Telefone', validators=[DataRequired(), Length(min=10, max=20)])
     especialidade = StringField('Especialidade', validators=[DataRequired(), Length(max=100)])
     submit = SubmitField('Cadastrar Instrutor')
+
+    def __init__(self, instrutor_original=None, *args, **kwargs):
+        super(InstrutorForm, self).__init__(*args, **kwargs)
+        self.instrutor_original = instrutor_original
+
+    def validate_cpf(self, cpf):
+        if self.instrutor_original and self.instrutor_original.cpf == cpf.data:
+            return
+        if Instrutor.query.filter_by(cpf=cpf.data).first():
+            raise ValidationError('Este CPF já está cadastrado.')
+
+    def validate_email(self, email):
+        if self.instrutor_original and self.instrutor_original.email == email.data:
+            return
+        if Instrutor.query.filter_by(email=email.data).first():
+            raise ValidationError('Este e-mail já está cadastrado.')
 
 
 class LoginForm(FlaskForm):
